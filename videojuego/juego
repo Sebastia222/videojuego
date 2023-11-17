@@ -1,0 +1,114 @@
+# juego
+import pygame
+import sys
+import random
+
+# Inicializa el módulo Pygame, necesario para usar sus funciones y recursos.
+pygame.init()
+# Define las dimensiones de la ventana del juego.
+WIDTH, HEIGHT = 640, 480
+# Crea una ventana con las dimensiones especificadas.
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+# Establece el título de la ventana.
+pygame.display.set_caption("LA VIBORITA")
+# Define algunos colores utilizando tuplas RGB.
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+# Define el tamaño de cada segmento de la serpiente.
+SNAKE_SIZE = 20
+# Inicializa la serpiente con una sola celda en el centro de la ventana.
+snake = [(WIDTH // 2, HEIGHT // 2)]
+# Define la dirección inicial de la serpiente como quieta (0, 0).
+snake_direction = (0, 0)
+# Genera la posición inicial de la comida de forma aleatoria.
+food = (random.randint(0, (WIDTH - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE,
+        random.randint(0, (HEIGHT - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE)
+# Inicializa el puntaje del jugador en cero.
+score = 0
+# Crea una fuente de texto con un tamaño de 36 puntos.
+font = pygame.font.Font(None, 36)
+# Inicializa un reloj para controlar la velocidad del juego.
+clock = pygame.time.Clock()
+# Define una función para dibujar la serpiente en la ventana del juego.
+def draw_snake():
+    for segment in snake:
+        pygame.draw.rect(screen, GREEN, (segment[0], segment[1], SNAKE_SIZE, SNAKE_SIZE))
+# Define una función para mover la serpiente.
+def move_snake():
+    global food, score
+    x, y = snake[0]
+    # Calcula la nueva posición de la cabeza de la serpiente en función de la dirección.
+    x += snake_direction[0]
+    y += snake_direction[1]
+    new_head = (x, y)
+    # Agrega la nueva cabeza a la serpiente.
+    snake.insert(0, new_head)
+    # Comprueba si la serpiente ha comido la comida.
+    if snake[0] == food:
+        score += 1  
+        # Genera una nueva posición para la comida de forma aleatoria.
+        food = (random.randint(0, (WIDTH - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE,
+                random.randint(0, (HEIGHT - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE)
+    else:
+        # Si no ha comido, elimina la cola de la serpiente para que se mueva.
+        snake.pop()
+# Función para mostrar la puntuación en la ventana del juego.
+def show_score():
+    # Renderiza el texto que muestra la puntuación actual en la fuente definida.
+    text = font.render(f"Score: {score}", True, WHITE)
+    # Dibuja el texto en la posición (10, 10) de la ventana.
+    screen.blit(text, (10, 10))
+# Función para reiniciar el juego.
+def reset_game():
+    # Restablece las variables globales a sus valores iniciales.
+    global snake, snake_direction, food, score
+    snake = [(WIDTH // 2, HEIGHT // 2)]  # Inicializa la serpiente en el centro de la ventana.
+    snake_direction = (0, 0)  # Restablece la dirección de la serpiente a quieta.
+    # Genera una nueva posición para la comida de forma aleatoria.
+    food = (random.randint(0, (WIDTH - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE,
+            random.randint(0, (HEIGHT - SNAKE_SIZE) // SNAKE_SIZE) * SNAKE_SIZE)
+    score = 0  # Restablece la puntuación a cero.
+
+# Función para manejar eventos del juego.
+def handle_events():
+    global snake_direction
+    # Itera a través de los eventos en la cola de eventos de Pygame.
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()  # Cierra Pygame.
+            sys.exit()  # Sale del programa.
+        elif event.type == pygame.KEYDOWN:
+            # Maneja eventos de teclado cuando una tecla se presiona.
+            if event.key == pygame.K_UP and snake_direction != (0, SNAKE_SIZE):
+                snake_direction = (0, -SNAKE_SIZE)  # Cambia la dirección hacia arriba.
+            elif event.key == pygame.K_DOWN and snake_direction != (0, -SNAKE_SIZE):
+                snake_direction = (0, SNAKE_SIZE)  # Cambia la dirección hacia abajo.
+            elif event.key == pygame.K_LEFT and snake_direction != (SNAKE_SIZE, 0):
+                snake_direction = (-SNAKE_SIZE, 0)  # Cambia la dirección hacia la izquierda.
+            elif event.key == pygame.K_RIGHT and snake_direction != (-SNAKE_SIZE, 0):
+                snake_direction = (SNAKE_SIZE, 0)  # Cambia la dirección hacia la derecha.
+while True:
+    # Maneja eventos del juego, como las teclas presionadas.
+    handle_events()
+    # Mueve la serpiente en la dirección actual.
+    move_snake()
+    # Comprueba si la cabeza de la serpiente choca con los bordes de la ventana.
+    if snake[0][0] < 0 or snake[0][0] >= WIDTH or snake[0][1] < 0 or snake[0][1] >= HEIGHT:
+        reset_game()  # Reinicia el juego si la serpiente choca con los bordes.
+    # Comprueba si la cabeza de la serpiente choca con su propio cuerpo.
+    for segment in snake[1:]:
+        if snake[0] == segment:
+            reset_game()  # Reinicia el juego si la serpiente se come a sí misma.
+    # Llena la pantalla con un fondo negro.
+    screen.fill(BLACK)
+    # Dibuja la comida en la ventana.
+    pygame.draw.rect(screen, WHITE, (food[0], food[1], SNAKE_SIZE, SNAKE_SIZE))
+    # Dibuja la serpiente en la ventana.
+    draw_snake()
+    # Muestra la puntuación en la ventana.
+    show_score()
+    # Actualiza la ventana para mostrar los cambios.
+    pygame.display.update()
+    # Limita la velocidad del juego a 10 fotogramas por segundo.
+    clock.tick(10)
